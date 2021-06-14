@@ -7,13 +7,14 @@ import {Event} from 'app/types/event';
 
 type Props = {
   event: Event;
+  isReloading: boolean;
 };
 
-function NewIssue({event}: Props) {
+function NewIssue({event, isReloading}: Props) {
   const {title, culprit, errors} = event;
   const errorCount = errors.length;
   return (
-    <StyledCard interactive={false}>
+    <StyledCard interactive={false} isReloading={isReloading}>
       <div>
         <Title>{title}</Title>
         <CulPrint>{culprit}</CulPrint>
@@ -28,7 +29,7 @@ function NewIssue({event}: Props) {
 
 export default NewIssue;
 
-const StyledCard = styled(Card)`
+const StyledCard = styled(Card)<{isReloading: boolean}>`
   margin-bottom: -1px;
   overflow: hidden;
   display: grid;
@@ -37,6 +38,12 @@ const StyledCard = styled(Card)`
   padding: ${space(1.5)} ${space(2)};
   grid-gap: ${space(2)};
   word-break: break-word;
+  ${p =>
+    p.isReloading &&
+    `
+      opacity: 0.5;
+      pointer-events: none;
+    `}
 `;
 
 const Title = styled('div')`
