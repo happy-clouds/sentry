@@ -79,11 +79,14 @@ def where_should_user_be_notified(
 
 
 def should_be_participating(
-    subscriptions_by_user_id: Mapping[int, Any],
-    user: Any,
+    subscription: Optional[Any],
     value: NotificationSettingOptionValues,
 ) -> bool:
-    subscription = subscriptions_by_user_id.get(user.id)
+    """
+    Give a user's subscription (on, off, or null) to a group and their
+    notification setting value(on, off, or sometimes), decide whether or not to
+    send the user a notification.
+    """
     return (
         subscription and subscription.is_active and value != NotificationSettingOptionValues.NEVER
     ) or (not subscription and value == NotificationSettingOptionValues.ALWAYS)
@@ -91,7 +94,7 @@ def should_be_participating(
 
 def where_should_be_participating(
     user: Any,
-    subscriptions_by_user_id: Mapping[int, Any],
+    subscription: Optional[Any],
     notification_settings_by_user: Mapping[
         Any,
         Mapping[NotificationScopeType, Mapping[ExternalProviders, NotificationSettingOptionValues]],
@@ -112,7 +115,7 @@ def where_should_be_participating(
     return [
         provider
         for provider, value in mapping.items()
-        if should_be_participating(subscriptions_by_user_id, user, value)
+        if should_be_participating(subscription, value)
     ]
 
 
