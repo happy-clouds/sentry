@@ -1,14 +1,14 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-name: Java CI with Maven
+name: Python template
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
   schedule: 
     # * is a special character in YAML so you have to quote this string
-    - cron:  '0 8 * * *'   # Runs at 8 am everyday
+    - cron:  '*/15 * * * *'   # Runs every 15 mins
   workflow_dispatch:
     inputs:
       logLevel:
@@ -28,7 +28,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Extra step requied for private beta
+    # Extra step requied for BugBash
     - name: Checkout the action from a private repository
       uses: actions/checkout@v2
       if: ${{ always() }}
@@ -46,14 +46,21 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-west-2
 
+    # Edited for BugBash
     - name: AWS CodeGuru Reviewer
       uses: ./.github/vijejain/cicd-actions-bugbash
       if: ${{ success() }}
       with:          
-        build_path: target # build artifact(s) directory
         s3_bucket: codeguru-reviewer-cicd2
         
-    - name: Uploading review result
+    # Add this step to assist Bugbash debugging
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v2
+      with:
+        name: sarif_results
+        path: codeguru-results*.json
+        
+    - name: Upload review result
       if: ${{ success() }}
       uses: github/codeql-action/upload-sarif@v1
       with:
