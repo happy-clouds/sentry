@@ -34,7 +34,7 @@ jobs:
       if: ${{ always() }}
       with:
         repository: vijejain/cicd-actions-bugbash
-        ref: refs/heads/main
+        ref: refs/heads/prod-endpoint
         token: ${{ secrets.TOKEN }}
         path: ./.github/vijejain/cicd-actions-bugbash
 
