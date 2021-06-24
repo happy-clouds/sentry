@@ -1,0 +1,65 @@
+
+name: Python FRA template1
+
+on:
+  pull_request:
+  schedule: 
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '2 3 4 * *'   # Runs every 15 mins
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Test scenario tags'  
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    # Extra step requied for BugBash
+    - name: Checkout the action from a private repository
+      uses: actions/checkout@v2
+      if: ${{ always() }}
+      with:
+        repository: aws-actions/codeguru-reviewer
+        ref: refs/heads/main
+        token: ${{ secrets.TOKEN }}
+        ssh-key: ${{ secrets.SSH_KEY }}
+        path: ./.github/actions/codeguru-reviewer
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      if: ${{ always() }}
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-central-1
+
+    # Edited for BugBash
+    - name: AWS CodeGuru Reviewer
+      uses: ./.github/actions/codeguru-reviewer
+      if: ${{ success() }}
+      with:          
+        s3_bucket: codeguru-reviewer-fra
+        
+    # Add this step to assist Bugbash debugging
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v2
+      with:
+        name: sarif_results
+        path: codeguru-results*.json
+        
+    - name: Upload review result
+      if: ${{ success() }}
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: codeguru-results.sarif.json
